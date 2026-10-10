@@ -269,10 +269,10 @@ import type {
   ModelConfigService,
   ModelConfigServiceConfig,
 } from '../services/modelConfigService.js';
-import { LocalLiteRtLmClient } from '../core/localLiteRtLmClient.js';
+import { LocalMlxLmClient } from '../core/localMlxLmClient.js';
 
 vi.mock('../core/baseLlmClient.js');
-vi.mock('../core/localLiteRtLmClient.js');
+vi.mock('../core/localMlxLmClient.js');
 vi.mock('../core/tokenLimits.js', () => ({
   tokenLimit: vi.fn(),
 }));
@@ -2870,7 +2870,7 @@ describe('Config getHooks', () => {
   });
 });
 
-describe('LocalLiteRtLmClient Lifecycle', () => {
+describe('LocalMlxLmClient Lifecycle', () => {
   const MODEL = 'gemini-pro';
   const SANDBOX: SandboxConfig = createMockSandboxConfig({
     command: 'docker',
@@ -2905,16 +2905,16 @@ describe('LocalLiteRtLmClient Lifecycle', () => {
     });
   });
 
-  it('should successfully initialize LocalLiteRtLmClient on first call and reuse it', () => {
+  it('should successfully initialize LocalMlxLmClient on first call and reuse it', () => {
     const config = new Config(baseParams);
-    const client1 = config.getLocalLiteRtLmClient();
-    const client2 = config.getLocalLiteRtLmClient();
+    const client1 = config.getLocalMlxLmClient();
+    const client2 = config.getLocalMlxLmClient();
 
     expect(client1).toBeDefined();
     expect(client1).toBe(client2); // Should return the same instance
   });
 
-  it('should configure LocalLiteRtLmClient with settings from getGemmaModelRouterSettings', () => {
+  it('should configure LocalMlxLmClient with settings from getGemmaModelRouterSettings', () => {
     const customHost = 'http://my-custom-host:9999';
     const customModel = 'my-custom-gemma-model';
     const params: ConfigParameters = {
@@ -2929,9 +2929,9 @@ describe('LocalLiteRtLmClient Lifecycle', () => {
     };
 
     const config = new Config(params);
-    config.getLocalLiteRtLmClient();
+    config.getLocalMlxLmClient();
 
-    expect(LocalLiteRtLmClient).toHaveBeenCalledWith(config);
+    expect(LocalMlxLmClient).toHaveBeenCalledWith(config);
   });
 });
 

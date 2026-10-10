@@ -16,7 +16,7 @@ import type { Config } from '../../config/config.js';
 import type { BaseLlmClient } from '../../core/baseLlmClient.js';
 import { debugLogger } from '../../utils/debugLogger.js';
 import { coreEvents } from '../../utils/events.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 
 vi.mock('../../utils/debugLogger.js', () => ({
   debugLogger: {
@@ -28,7 +28,7 @@ describe('CompositeStrategy', () => {
   let mockContext: RoutingContext;
   let mockConfig: Config;
   let mockBaseLlmClient: BaseLlmClient;
-  let mockLocalLiteRtLmClient: LocalLiteRtLmClient;
+  let mockLocalMlxLmClient: LocalMlxLmClient;
   let mockStrategy1: RoutingStrategy;
   let mockStrategy2: RoutingStrategy;
   let mockTerminalStrategy: TerminalStrategy;
@@ -40,7 +40,7 @@ describe('CompositeStrategy', () => {
     mockContext = {} as RoutingContext;
     mockConfig = {} as Config;
     mockBaseLlmClient = {} as BaseLlmClient;
-    mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+    mockLocalMlxLmClient = {} as LocalMlxLmClient;
 
     emitFeedbackSpy = vi.spyOn(coreEvents, 'emitFeedback');
 
@@ -87,20 +87,20 @@ describe('CompositeStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockStrategy1.route).toHaveBeenCalledWith(
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
     expect(mockStrategy2.route).toHaveBeenCalledWith(
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
     expect(mockTerminalStrategy.route).not.toHaveBeenCalled();
 
@@ -118,7 +118,7 @@ describe('CompositeStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockStrategy1.route).toHaveBeenCalledTimes(1);
@@ -143,7 +143,7 @@ describe('CompositeStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(debugLogger.warn).toHaveBeenCalledWith(
@@ -164,7 +164,7 @@ describe('CompositeStrategy', () => {
         mockContext,
         mockConfig,
         mockBaseLlmClient,
-        mockLocalLiteRtLmClient,
+        mockLocalMlxLmClient,
       ),
     ).rejects.toThrow(terminalError);
 
@@ -195,7 +195,7 @@ describe('CompositeStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(result.model).toBe('some-model');
@@ -226,7 +226,7 @@ describe('CompositeStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(result.metadata.latencyMs).toBeGreaterThanOrEqual(0);

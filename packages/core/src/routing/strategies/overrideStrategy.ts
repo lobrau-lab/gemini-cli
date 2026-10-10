@@ -12,7 +12,7 @@ import type {
   RoutingDecision,
   RoutingStrategy,
 } from '../routingStrategy.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 
 /**
  * Handles cases where the user explicitly specifies a model (override).
@@ -24,7 +24,7 @@ export class OverrideStrategy implements RoutingStrategy {
     context: RoutingContext,
     config: Config,
     _baseLlmClient: BaseLlmClient,
-    _localLiteRtLmClient: LocalLiteRtLmClient,
+    _localMlxLmClient: LocalMlxLmClient,
   ): Promise<RoutingDecision | null> {
     const overrideModel = context.requestedModel ?? config.getModel();
 

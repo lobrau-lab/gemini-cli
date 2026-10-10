@@ -10,7 +10,7 @@ import type { RoutingContext } from '../routingStrategy.js';
 import type { BaseLlmClient } from '../../core/baseLlmClient.js';
 import type { Config } from '../../config/config.js';
 import type { ModelAvailabilityService } from '../../availability/modelAvailabilityService.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 import {
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_FLASH_MODEL,
@@ -33,7 +33,7 @@ describe('FallbackStrategy', () => {
   const strategy = new FallbackStrategy();
   const mockContext = {} as RoutingContext;
   const mockClient = {} as BaseLlmClient;
-  const mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+  const mockLocalMlxLmClient = {} as LocalMlxLmClient;
   let mockService: ModelAvailabilityService;
   let mockConfig: Config;
 
@@ -57,7 +57,7 @@ describe('FallbackStrategy', () => {
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
     expect(decision).toBeNull();
     // Should check availability of the resolved model (DEFAULT_GEMINI_MODEL)
@@ -80,7 +80,7 @@ describe('FallbackStrategy', () => {
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
     expect(decision).toBeNull();
   });
@@ -102,7 +102,7 @@ describe('FallbackStrategy', () => {
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).not.toBeNull();
@@ -122,7 +122,7 @@ describe('FallbackStrategy', () => {
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -144,7 +144,7 @@ describe('FallbackStrategy', () => {
       contextWithRequestedModel,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();

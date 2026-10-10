@@ -14,7 +14,7 @@ import type {
   RoutingStrategy,
   TerminalStrategy,
 } from '../routingStrategy.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 
 /**
  * A strategy that attempts a list of child strategies in order (Chain of Responsibility).
@@ -41,7 +41,7 @@ export class CompositeStrategy implements TerminalStrategy {
     context: RoutingContext,
     config: Config,
     baseLlmClient: BaseLlmClient,
-    localLiteRtLmClient: LocalLiteRtLmClient,
+    localMlxLmClient: LocalMlxLmClient,
   ): Promise<RoutingDecision> {
     const startTime = performance.now();
 
@@ -63,7 +63,7 @@ export class CompositeStrategy implements TerminalStrategy {
           context,
           config,
           baseLlmClient,
-          localLiteRtLmClient,
+          localMlxLmClient,
         );
         if (decision) {
           return this.finalizeDecision(decision, startTime);
@@ -82,7 +82,7 @@ export class CompositeStrategy implements TerminalStrategy {
         context,
         config,
         baseLlmClient,
-        localLiteRtLmClient,
+        localMlxLmClient,
       );
 
       return this.finalizeDecision(decision, startTime);

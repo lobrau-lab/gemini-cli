@@ -9,7 +9,7 @@ import { ModelRouterService } from './modelRouterService.js';
 import { Config } from '../config/config.js';
 
 import type { BaseLlmClient } from '../core/baseLlmClient.js';
-import type { LocalLiteRtLmClient } from '../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../core/localMlxLmClient.js';
 import type { RoutingContext, RoutingDecision } from './routingStrategy.js';
 import { DefaultStrategy } from './strategies/defaultStrategy.js';
 import { CompositeStrategy } from './strategies/compositeStrategy.js';
@@ -40,7 +40,7 @@ describe('ModelRouterService', () => {
   let service: ModelRouterService;
   let mockConfig: Config;
   let mockBaseLlmClient: BaseLlmClient;
-  let mockLocalLiteRtLmClient: LocalLiteRtLmClient;
+  let mockLocalMlxLmClient: LocalMlxLmClient;
   let mockContext: RoutingContext;
   let mockCompositeStrategy: CompositeStrategy;
 
@@ -49,10 +49,10 @@ describe('ModelRouterService', () => {
 
     mockConfig = new Config({} as never);
     mockBaseLlmClient = {} as BaseLlmClient;
-    mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+    mockLocalMlxLmClient = {} as LocalMlxLmClient;
     vi.spyOn(mockConfig, 'getBaseLlmClient').mockReturnValue(mockBaseLlmClient);
-    vi.spyOn(mockConfig, 'getLocalLiteRtLmClient').mockReturnValue(
-      mockLocalLiteRtLmClient,
+    vi.spyOn(mockConfig, 'getLocalMlxLmClient').mockReturnValue(
+      mockLocalMlxLmClient,
     );
     vi.spyOn(mockConfig, 'getNumericalRoutingEnabled').mockResolvedValue(true);
     vi.spyOn(mockConfig, 'getResolvedClassifierThreshold').mockResolvedValue(
@@ -165,7 +165,7 @@ describe('ModelRouterService', () => {
         mockContext,
         mockConfig,
         mockBaseLlmClient,
-        mockLocalLiteRtLmClient,
+        mockLocalMlxLmClient,
       );
       expect(decision).toEqual(strategyDecision);
     });

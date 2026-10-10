@@ -2363,27 +2363,27 @@ const SETTINGS_SCHEMA = {
             requiresRestart: true,
             default: false,
             description:
-              'Enable the Gemma Model Router (experimental). Requires a local endpoint serving Gemma via the Gemini API using LiteRT-LM shim.',
+              'Enable the Gemma Model Router (experimental). Requires a local endpoint serving Gemma via the Gemini API using MLX-LM shim.',
             showInDialog: true,
           },
           autoStartServer: {
             type: 'boolean',
-            label: 'Auto-start LiteRT Server',
+            label: 'Auto-start MLX Server',
             category: 'Experimental',
             requiresRestart: true,
             default: false,
             description:
-              'Automatically start the LiteRT-LM server when Gemini CLI starts and the Gemma router is enabled.',
+              'Automatically start the MLX-LM server when Gemini CLI starts and the Gemma router is enabled.',
             showInDialog: true,
           },
           binaryPath: {
             type: 'string',
-            label: 'LiteRT Binary Path',
+            label: 'MLX Binary Path',
             category: 'Experimental',
             requiresRestart: true,
             default: '',
             description:
-              'Custom path to the LiteRT-LM binary. Leave empty to use the default location (~/.gemini/bin/litert/).',
+              'Custom path to the MLX-LM binary. Leave empty to use the default location (~/.gemini/bin/litert/).',
             showInDialog: false,
           },
           classifier: {

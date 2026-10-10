@@ -845,8 +845,8 @@ export async function main() {
     const initializationResult = await initializeApp(config, settings);
     initAppHandle?.end();
 
-    import('./services/liteRtServerManager.js')
-      .then(({ LiteRtServerManager }) => {
+    import('./services/mlxServerManager.js')
+      .then(({ MlxServerManager }) => {
         const mergedGemma = settings.merged.experimental?.gemmaModelRouter;
         if (!mergedGemma) return;
         // Security: binaryPath and autoStartServer must come from user-scoped
@@ -854,13 +854,13 @@ export async function main() {
         // binary execution.
         const userGemma = settings.forScope(SettingScope.User).settings
           .experimental?.gemmaModelRouter;
-        return LiteRtServerManager.ensureRunning({
+        return MlxServerManager.ensureRunning({
           ...mergedGemma,
           binaryPath: userGemma?.binaryPath,
           autoStartServer: userGemma?.autoStartServer,
         });
       })
-      .catch((e) => debugLogger.warn('LiteRT auto-start import failed:', e));
+      .catch((e) => debugLogger.warn('MLX auto-start import failed:', e));
 
     if (
       settings.merged.security.auth.selectedType ===

@@ -12,7 +12,7 @@ import { exitCli } from '../utils.js';
 import { DEFAULT_PORT, getPidFilePath } from './constants.js';
 import {
   getBinaryPath,
-  isExpectedLiteRtServerProcess,
+  isExpectedMlxServerProcess,
   isProcessRunning,
   isServerRunning,
   readServerPid,
@@ -51,9 +51,9 @@ export async function stopServer(
 
   const binaryPath = processInfo.binaryPath ?? getBinaryPath();
   const port = processInfo.port ?? expectedPort;
-  if (!isExpectedLiteRtServerProcess(pid, { binaryPath, port })) {
+  if (!isExpectedMlxServerProcess(pid, { binaryPath, port })) {
     debugLogger.warn(
-      `Refusing to stop PID ${pid} because it does not match the expected LiteRT server process.`,
+      `Refusing to stop PID ${pid} because it does not match the expected MLX server process.`,
     );
     return 'unexpected-process';
   }
@@ -89,11 +89,11 @@ export async function stopServer(
 
 export const stopCommand: CommandModule = {
   command: 'stop',
-  describe: 'Stop the LiteRT-LM server',
+  describe: 'Stop the MLX server',
   builder: (yargs) =>
     yargs.option('port', {
       type: 'number',
-      description: 'Port where the LiteRT server is running',
+      description: 'Port where the MLX server is running',
     }),
   handler: async (argv) => {
     let port: number | undefined;
@@ -110,15 +110,15 @@ export const stopCommand: CommandModule = {
     const pid = processInfo?.pid ?? readServerPid();
 
     if (pid !== null && isProcessRunning(pid)) {
-      debugLogger.log(`Stopping LiteRT server (PID ${pid})...`);
+      debugLogger.log(`Stopping MLX server (PID ${pid})...`);
       const result = await stopServer(port);
       if (result === 'stopped') {
-        debugLogger.log(chalk.green('LiteRT server stopped.'));
+        debugLogger.log(chalk.green('MLX server stopped.'));
         await exitCli(0);
       } else if (result === 'unexpected-process') {
         debugLogger.error(
           chalk.red(
-            `Refusing to stop PID ${pid} because it does not match the expected LiteRT server process.`,
+            `Refusing to stop PID ${pid} because it does not match the expected MLX server process.`,
           ),
         );
         debugLogger.error(
@@ -128,7 +128,7 @@ export const stopCommand: CommandModule = {
         );
         await exitCli(1);
       } else {
-        debugLogger.error(chalk.red('Failed to stop LiteRT server.'));
+        debugLogger.error(chalk.red('Failed to stop MLX server.'));
         await exitCli(1);
       }
       return;
@@ -138,7 +138,7 @@ export const stopCommand: CommandModule = {
     if (running) {
       debugLogger.log(
         chalk.yellow(
-          `A server is responding on port ${port}, but it was not started by "gemini gemma start".`,
+          `A server is responding on port ${port}, but it was not started by "gemma start".`,
         ),
       );
       debugLogger.log(
@@ -148,7 +148,7 @@ export const stopCommand: CommandModule = {
       );
       await exitCli(1);
     } else {
-      debugLogger.log('No LiteRT server is currently running.');
+      debugLogger.log('No MLX server is currently running.');
       await exitCli(0);
     }
   },

@@ -5,25 +5,18 @@
  */
 
 import type { CommandModule } from 'yargs';
-import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync, spawn as nodeSpawn } from 'node:child_process';
+import { spawn as nodeSpawn } from 'node:child_process';
 import chalk from 'chalk';
 import { debugLogger } from '@google/gemini-cli-core';
 import { loadSettings, SettingScope } from '../../config/settings.js';
 import { exitCli } from '../utils.js';
-import {
-  DEFAULT_PORT,
-  GEMMA_MODEL_NAME,
-  PLATFORM_BINARY_SHA256,
-} from './constants.js';
+import { getMlxVenvDir, GEMMA_MODEL_NAME, DEFAULT_PORT } from './constants.js';
 import {
   detectPlatform,
-  getBinaryDownloadUrl,
   getBinaryPath,
   isBinaryInstalled,
-  isModelDownloaded,
 } from './platform.js';
 import { startServer } from './start.js';
 import readline from 'node:readline';
@@ -47,96 +40,6 @@ async function promptYesNo(question: string): Promise<boolean> {
   });
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function renderProgress(downloaded: number, total: number | null): void {
-  const barWidth = 30;
-  if (total && total > 0) {
-    const pct = Math.min(downloaded / total, 1);
-    const filled = Math.round(barWidth * pct);
-    const bar = '█'.repeat(filled) + '░'.repeat(barWidth - filled);
-    const pctStr = (pct * 100).toFixed(0).padStart(3);
-    process.stderr.write(
-      `\r  [${bar}] ${pctStr}% ${formatBytes(downloaded)} / ${formatBytes(total)}`,
-    );
-  } else {
-    process.stderr.write(`\r  Downloaded ${formatBytes(downloaded)}`);
-  }
-}
-
-async function downloadFile(url: string, destPath: string): Promise<void> {
-  const tmpPath = destPath + '.downloading';
-  if (fs.existsSync(tmpPath)) {
-    fs.unlinkSync(tmpPath);
-  }
-
-  const response = await fetch(url, { redirect: 'follow' });
-  if (!response.ok) {
-    throw new Error(
-      `Download failed: HTTP ${response.status} ${response.statusText}`,
-    );
-  }
-  if (!response.body) {
-    throw new Error('Download failed: No response body');
-  }
-
-  const contentLength = response.headers.get('content-length');
-  const totalBytes = contentLength ? parseInt(contentLength, 10) : null;
-  let downloadedBytes = 0;
-
-  const fileStream = fs.createWriteStream(tmpPath);
-  const reader = response.body.getReader();
-
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const writeOk = fileStream.write(value);
-      if (!writeOk) {
-        await new Promise<void>((resolve) => fileStream.once('drain', resolve));
-      }
-      downloadedBytes += value.byteLength;
-      renderProgress(downloadedBytes, totalBytes);
-    }
-  } finally {
-    fileStream.end();
-    process.stderr.write('\r' + ' '.repeat(80) + '\r');
-  }
-
-  await new Promise<void>((resolve, reject) => {
-    fileStream.on('finish', resolve);
-    fileStream.on('error', reject);
-  });
-
-  fs.renameSync(tmpPath, destPath);
-}
-
-export async function computeFileSha256(filePath: string): Promise<string> {
-  const hash = createHash('sha256');
-  const fileStream = fs.createReadStream(filePath);
-
-  return new Promise((resolve, reject) => {
-    fileStream.on('data', (chunk) => {
-      hash.update(chunk);
-    });
-    fileStream.on('error', reject);
-    fileStream.on('end', () => {
-      resolve(hash.digest('hex'));
-    });
-  });
-}
-
-export async function verifyFileSha256(
-  filePath: string,
-  expectedHash: string,
-): Promise<boolean> {
-  const actualHash = await computeFileSha256(filePath);
-  return actualHash === expectedHash;
-}
 
 function spawnInherited(command: string, args: string[]): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -158,14 +61,9 @@ interface SetupArgs {
 
 async function handleSetup(argv: SetupArgs): Promise<number> {
   const { port, force } = argv;
+  let autoStartServer = true;
   let settingsUpdated = false;
   let serverStarted = false;
-  let autoStartServer = true;
-
-  log('');
-  log(chalk.bold('Gemma Local Model Routing Setup'));
-  log(chalk.dim('─'.repeat(40)));
-  log('');
 
   const platform = detectPlatform();
   if (!platform) {
@@ -173,17 +71,17 @@ async function handleSetup(argv: SetupArgs): Promise<number> {
       chalk.red(`Unsupported platform: ${process.platform}-${process.arch}`),
     );
     logError(
-      'LiteRT-LM binaries are available for: macOS (ARM64), Linux (x86_64), Windows (x86_64)',
+      'MLX server is only available for Apple Silicon: macOS (ARM64)',
     );
     return 1;
   }
-  log(chalk.dim(`  Platform: ${platform.key} → ${platform.binaryName}`));
+  log(chalk.dim(`  Platform: ${platform.key}`));
 
   if (!argv.consent) {
     log('');
-    log('This will download and install the LiteRT-LM runtime and the');
+    log('This will create a Python virtual environment and install mlx-lm.');
     log(
-      `Gemma model (${GEMMA_MODEL_NAME}, ~1 GB). By proceeding, you agree to the`,
+      `Gemma model (${GEMMA_MODEL_NAME}) will be downloaded on first run. By proceeding, you agree to the`,
     );
     log('Gemma Terms of Use: https://ai.google.dev/gemma/terms');
     log('');
@@ -195,128 +93,43 @@ async function handleSetup(argv: SetupArgs): Promise<number> {
     }
   }
 
-  const binaryPath = getBinaryPath(platform.binaryName)!;
+  const binaryPath = getBinaryPath()!;
+  const venvDir = getMlxVenvDir();
   const alreadyInstalled = isBinaryInstalled();
 
   if (alreadyInstalled && !force) {
     log('');
-    log(chalk.green('  ✓ LiteRT-LM binary already installed at:'));
-    log(chalk.dim(`    ${binaryPath}`));
+    log(chalk.green('  ✓ MLX python environment already setup at:'));
+    log(chalk.dim(`    ${venvDir}`));
   } else {
     log('');
-    log('  Downloading LiteRT-LM binary...');
-    const downloadUrl = getBinaryDownloadUrl(platform.binaryName);
-    debugLogger.log(`Downloading from: ${downloadUrl}`);
+    log('  Setting up MLX Python environment...');
 
     try {
-      const binDir = path.dirname(binaryPath);
-      fs.mkdirSync(binDir, { recursive: true });
-      await downloadFile(downloadUrl, binaryPath);
-      log(chalk.green('  ✓ Binary downloaded successfully'));
+      fs.mkdirSync(path.dirname(venvDir), { recursive: true });
+      if (fs.existsSync(venvDir)) {
+          fs.rmSync(venvDir, { recursive: true, force: true });
+      }
+
+      const venvExitCode = await spawnInherited('python3', ['-m', 'venv', venvDir]);
+      if (venvExitCode !== 0) {
+        throw new Error(`Failed to create venv (exit code ${venvExitCode})`);
+      }
+
+      const pipPath = path.join(venvDir, 'bin', 'pip');
+      const pipExitCode = await spawnInherited(pipPath, ['install', 'mlx-lm']);
+      if (pipExitCode !== 0) {
+         throw new Error(`Failed to install mlx-lm (exit code ${pipExitCode})`);
+      }
+
+      log(chalk.green('  ✓ MLX Python environment setup successfully'));
     } catch (error) {
       logError(
         chalk.red(
-          `  ✗ Failed to download binary: ${error instanceof Error ? error.message : String(error)}`,
+          `  ✗ Failed to setup MLX environment: ${error instanceof Error ? error.message : String(error)}`,
         ),
       );
-      logError('  Check your internet connection and try again.');
       return 1;
-    }
-
-    const expectedHash = PLATFORM_BINARY_SHA256[platform.binaryName];
-    if (!expectedHash) {
-      logError(
-        chalk.red(
-          `  ✗ No checksum is configured for ${platform.binaryName}. Refusing to install the binary.`,
-        ),
-      );
-      try {
-        fs.rmSync(binaryPath, { force: true });
-      } catch {
-        // ignore
-      }
-      return 1;
-    }
-
-    try {
-      const checksumVerified = await verifyFileSha256(binaryPath, expectedHash);
-      if (!checksumVerified) {
-        logError(
-          chalk.red(
-            '  ✗ Downloaded binary checksum did not match the expected release hash.',
-          ),
-        );
-        try {
-          fs.rmSync(binaryPath, { force: true });
-        } catch {
-          // ignore
-        }
-        return 1;
-      }
-      log(chalk.green('  ✓ Binary checksum verified'));
-    } catch (error) {
-      logError(
-        chalk.red(
-          `  ✗ Failed to verify binary checksum: ${error instanceof Error ? error.message : String(error)}`,
-        ),
-      );
-      try {
-        fs.rmSync(binaryPath, { force: true });
-      } catch {
-        // ignore
-      }
-      return 1;
-    }
-
-    if (process.platform !== 'win32') {
-      try {
-        fs.chmodSync(binaryPath, 0o755);
-      } catch (error) {
-        logError(
-          chalk.red(
-            `  ✗ Failed to set executable permission: ${error instanceof Error ? error.message : String(error)}`,
-          ),
-        );
-        return 1;
-      }
-    }
-
-    if (process.platform === 'darwin') {
-      try {
-        execFileSync('xattr', ['-d', 'com.apple.quarantine', binaryPath], {
-          stdio: 'ignore',
-        });
-        log(chalk.green('  ✓ macOS quarantine attribute removed'));
-      } catch {
-        // Expected if the attribute doesn't exist.
-      }
-    }
-  }
-
-  if (!argv.skipModel) {
-    const modelAlreadyDownloaded = isModelDownloaded(binaryPath);
-    if (modelAlreadyDownloaded && !force) {
-      log('');
-      log(chalk.green(`  ✓ Model ${GEMMA_MODEL_NAME} already downloaded`));
-    } else {
-      log('');
-      log(`  Downloading model ${GEMMA_MODEL_NAME}...`);
-      log(chalk.dim('  You may be prompted to accept the Gemma Terms of Use.'));
-      log('');
-
-      const exitCode = await spawnInherited(binaryPath, [
-        'pull',
-        GEMMA_MODEL_NAME,
-      ]);
-      if (exitCode !== 0) {
-        logError('');
-        logError(
-          chalk.red(`  ✗ Model download failed (exit code ${exitCode})`),
-        );
-        return 1;
-      }
-      log('');
-      log(chalk.green(`  ✓ Model ${GEMMA_MODEL_NAME} downloaded`));
     }
   }
 
@@ -325,8 +138,6 @@ async function handleSetup(argv: SetupArgs): Promise<number> {
   try {
     const settings = loadSettings(process.cwd());
 
-    // User scope: security-sensitive settings that must not be overridable
-    // by workspace configs (prevents arbitrary binary execution).
     const existingUserGemma =
       settings.forScope(SettingScope.User).settings.experimental
         ?.gemmaModelRouter ?? {};
@@ -343,8 +154,6 @@ async function handleSetup(argv: SetupArgs): Promise<number> {
       },
     });
 
-    // Workspace scope: project-isolated settings so the local model only
-    // runs for this specific project, saving resources globally.
     const existingWorkspaceGemma =
       settings.forScope(SettingScope.Workspace).settings.experimental
         ?.gemmaModelRouter ?? {};
@@ -382,14 +191,14 @@ async function handleSetup(argv: SetupArgs): Promise<number> {
 
   if (argv.start) {
     log('');
-    log('  Starting LiteRT server...');
+    log('  Starting MLX server...');
     serverStarted = await startServer(binaryPath, port);
     if (serverStarted) {
       log(chalk.green(`  ✓ Server started on port ${port}`));
     } else {
       log(
         chalk.yellow(
-          `  ! Server may not have started correctly. Check: gemini gemma status`,
+          `  ! Server may not have started correctly. Check: gemma status`,
         ),
       );
     }
@@ -429,12 +238,12 @@ async function handleSetup(argv: SetupArgs): Promise<number> {
   if (!settingsUpdated) {
     log(
       chalk.yellow(
-        '  Fix the settings update above, then rerun "gemini gemma status".',
+        '  Fix the settings update above, then rerun "gemma status".',
       ),
     );
     log('');
   } else if (!argv.start) {
-    log(chalk.yellow('  Note: Run "gemini gemma start" to start the server.'));
+    log(chalk.yellow('  Note: Run "gemma start" to start the server.'));
     if (autoStartServer) {
       log(
         chalk.yellow(
@@ -446,16 +255,16 @@ async function handleSetup(argv: SetupArgs): Promise<number> {
   } else if (!serverStarted) {
     log(
       chalk.yellow(
-        '  Review the server logs and rerun "gemini gemma start" after fixing the issue.',
+        '  Review the server logs and rerun "gemma start" after fixing the issue.',
       ),
     );
     log('');
   }
   log('  Useful commands:');
-  log(chalk.dim('    gemini gemma status   Check routing status'));
-  log(chalk.dim('    gemini gemma start    Start the LiteRT server'));
-  log(chalk.dim('    gemini gemma stop     Stop the LiteRT server'));
-  log(chalk.dim('    /gemma               Check status inside a session'));
+  log(chalk.dim('    gemma status   Check routing status'));
+  log(chalk.dim('    gemma start    Start the MLX server'));
+  log(chalk.dim('    gemma stop     Stop the MLX server'));
+  log(chalk.dim('    /gemma         Check status inside a session'));
   log('');
 
   return setupSucceeded ? 0 : 1;
@@ -469,7 +278,7 @@ export const setupCommand: CommandModule = {
       .option('port', {
         type: 'number',
         default: DEFAULT_PORT,
-        description: 'Port for the LiteRT server',
+        description: 'Port for the MLX server',
       })
       .option('skip-model', {
         type: 'boolean',

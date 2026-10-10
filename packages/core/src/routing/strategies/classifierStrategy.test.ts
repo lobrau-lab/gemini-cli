@@ -9,7 +9,7 @@ import { ClassifierStrategy } from './classifierStrategy.js';
 import type { RoutingContext } from '../routingStrategy.js';
 import type { Config } from '../../config/config.js';
 import type { BaseLlmClient } from '../../core/baseLlmClient.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 import {
   isFunctionCall,
   isFunctionResponse,
@@ -38,7 +38,7 @@ describe('ClassifierStrategy', () => {
   let mockContext: RoutingContext;
   let mockConfig: Config;
   let mockBaseLlmClient: BaseLlmClient;
-  let mockLocalLiteRtLmClient: LocalLiteRtLmClient;
+  let mockLocalMlxLmClient: LocalMlxLmClient;
   let mockResolvedConfig: ResolvedModelConfig;
 
   beforeEach(() => {
@@ -80,7 +80,7 @@ describe('ClassifierStrategy', () => {
     mockBaseLlmClient = {
       generateJson: vi.fn(),
     } as unknown as BaseLlmClient;
-    mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+    mockLocalMlxLmClient = {} as LocalMlxLmClient;
 
     vi.spyOn(promptIdContext, 'getStore').mockReturnValue('test-prompt-id');
   });
@@ -93,7 +93,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -112,7 +112,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).not.toBeNull();
@@ -132,7 +132,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockBaseLlmClient.generateJson).toHaveBeenCalledWith(
@@ -156,7 +156,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockBaseLlmClient.generateJson).toHaveBeenCalledOnce();
@@ -184,7 +184,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockBaseLlmClient.generateJson).toHaveBeenCalledOnce();
@@ -209,7 +209,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -233,7 +233,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -265,7 +265,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     const generateJsonCall = vi.mocked(mockBaseLlmClient.generateJson).mock
@@ -306,7 +306,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     const generateJsonCall = vi.mocked(mockBaseLlmClient.generateJson).mock
@@ -347,7 +347,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     const generateJsonCall = vi.mocked(mockBaseLlmClient.generateJson).mock
@@ -383,7 +383,7 @@ describe('ClassifierStrategy', () => {
       contextWithRequestedModel,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).not.toBeNull();
@@ -409,7 +409,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -430,7 +430,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -461,7 +461,7 @@ describe('ClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).not.toBeNull();
@@ -498,7 +498,7 @@ describe('ClassifierStrategy', () => {
         mockContext,
         mockConfig,
         mockBaseLlmClient,
-        mockLocalLiteRtLmClient,
+        mockLocalMlxLmClient,
       );
 
       expect(decision?.model).toBe(PREVIEW_GEMINI_3_1_MODEL);
@@ -522,7 +522,7 @@ describe('ClassifierStrategy', () => {
         mockContext,
         mockConfig,
         mockBaseLlmClient,
-        mockLocalLiteRtLmClient,
+        mockLocalMlxLmClient,
       );
 
       expect(decision?.model).toBe(PREVIEW_GEMINI_3_1_CUSTOM_TOOLS_MODEL);
@@ -544,7 +544,7 @@ describe('ClassifierStrategy', () => {
         mockContext,
         mockConfig,
         mockBaseLlmClient,
-        mockLocalLiteRtLmClient,
+        mockLocalMlxLmClient,
       );
 
       expect(decision?.model).toBe(LATEST_GEMINI_FLASH_MODEL);

@@ -12,7 +12,7 @@ import { debugLogger } from '../utils/debugLogger.js';
  * A client for making single, non-streaming calls to a local Gemini-compatible API
  * and expecting a JSON response.
  */
-export class LocalLiteRtLmClient {
+export class LocalMlxLmClient {
   private readonly host: string;
   private readonly model: string;
   private readonly client: GoogleGenAI;
@@ -23,15 +23,15 @@ export class LocalLiteRtLmClient {
     this.model = gemmaModelRouterSettings.classifier!.model!;
 
     this.client = new GoogleGenAI({
-      // The LiteRT-LM server does not require an API key, but the SDK requires one to be set even for local endpoints. This is a dummy value and is not used for authentication.
+      // The MLX server does not require an API key, but the SDK requires one to be set even for local endpoints. This is a dummy value and is not used for authentication.
       apiKey: 'no-api-key-needed',
       apiVersion: 'v1beta',
       vertexai: false,
       httpOptions: {
         baseUrl: this.host,
-        // If the LiteRT-LM server is started but the wrong port is set, there will be a lengthy TCP timeout (here fixed to be 10 seconds).
-        // If the LiteRT-LM server is not started, there will be an immediate connection refusal.
-        // If the LiteRT-LM server is started and the model is unsupported or not downloaded, the server will return an error immediately.
+        // If the MLX server is started but the wrong port is set, there will be a lengthy TCP timeout (here fixed to be 10 seconds).
+        // If the MLX server is not started, there will be an immediate connection refusal.
+        // If the MLX server is started and the model is unsupported or not downloaded, the server will return an error immediately.
         // If the model's context window is exceeded, the server will return an error immediately.
         timeout: 10000,
       },
@@ -93,7 +93,7 @@ export class LocalLiteRtLmClient {
       throw new Error('Invalid JSON response format from Local LLM');
     } catch (error) {
       debugLogger.error(
-        `[LocalLiteRtLmClient] Failed to generate content:`,
+        `[LocalMlxLmClient] Failed to generate content:`,
         error,
       );
       throw error;

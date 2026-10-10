@@ -20,7 +20,7 @@ import {
   isFunctionResponse,
 } from '../../utils/messageInspectors.js';
 import { debugLogger } from '../../utils/debugLogger.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 
 // The number of recent history turns to provide to the router for context.
 const HISTORY_TURNS_FOR_CONTEXT = 4;
@@ -61,7 +61,7 @@ And you must follow the following JSON schema:
 You must ensure that your reasoning is no more than 2 sentences long and directly references the rubric criteria.
 When making your decision, the user's request should be weighted much more heavily than the surrounding context when making your determination.`;
 
-const LITERT_GEMMA_CLASSIFIER_SYSTEM_PROMPT = `### Role
+const MLX_GEMMA_CLASSIFIER_SYSTEM_PROMPT = `### Role
 You are the **Lead Orchestrator** for an AI system. You do not talk to users. Your sole responsibility is to analyze the **Chat History** and delegate the **Current Request** to the most appropriate **Model** based on the request's complexity.
 
 ### Models
@@ -118,7 +118,7 @@ ${OUTPUT_FORMAT}
 }
 `;
 
-const LITERT_GEMMA_CLASSIFIER_REMINDER = `### Reminder
+const MLX_GEMMA_CLASSIFIER_REMINDER = `### Reminder
 You are a Task Routing AI. Your sole task is to analyze the preceding **Chat History** and **Current Request** and classify its complexity.
 
 ${COMPLEXITY_RUBRIC}
@@ -170,7 +170,7 @@ ${formattedHistory}
     context: RoutingContext,
     config: Config,
     _baseLlmClient: BaseLlmClient,
-    client: LocalLiteRtLmClient,
+    client: LocalMlxLmClient,
   ): Promise<RoutingDecision | null> {
     const startTime = Date.now();
     const gemmaRouterSettings = config.getGemmaModelRouterSettings();
@@ -179,8 +179,8 @@ ${formattedHistory}
     }
 
     // Only the gemma3-1b-gpu-custom model has been tested and verified.
-    if (gemmaRouterSettings.classifier?.model !== 'gemma3-1b-gpu-custom') {
-      throw new Error('Only gemma3-1b-gpu-custom has been tested');
+    if (gemmaRouterSettings.classifier?.model !== 'mlx-community/quantized-gemma-2b') {
+      throw new Error('Only mlx-community/quantized-gemma-2b has been tested');
     }
 
     try {
@@ -200,8 +200,8 @@ ${formattedHistory}
 
       const jsonResponse = await client.generateJson(
         singleMessageHistory,
-        LITERT_GEMMA_CLASSIFIER_SYSTEM_PROMPT,
-        LITERT_GEMMA_CLASSIFIER_REMINDER,
+        MLX_GEMMA_CLASSIFIER_SYSTEM_PROMPT,
+        MLX_GEMMA_CLASSIFIER_REMINDER,
         context.signal,
       );
 
