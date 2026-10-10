@@ -308,17 +308,23 @@ export class LinuxSandboxManager implements SandboxManager {
       isReadOnlyCommand: req.command === '__read',
     });
 
-    const bpfPath = getSeccompBpfPath();
-    bwrapArgs.push('--seccomp', '9');
+    let bpfPath = '';
+    if (process.env['SKIP_SECCOMP'] !== '1') {
+      bpfPath = getSeccompBpfPath();
+      bwrapArgs.push('--seccomp', '9');
+    }
 
     const argsPath = this.writeArgsToTempFile(bwrapArgs);
 
     const shArgs = [
       '-c',
-      'bpf_path="$1"; args_path="$2"; shift 2; exec bwrap --args 8 "$@" 8< "$args_path" 9< "$bpf_path"',
+      process.env['SKIP_SECCOMP'] === '1'
+        ? 'args_path="$1"; shift 1; exec bwrap --args 8 "$@" 8< "$args_path"'
+        : 'bpf_path="$1"; args_path="$2"; shift 2; exec bwrap --args 8 "$@" 8< "$args_path" 9< "$bpf_path"',
       '_',
-      bpfPath,
-      argsPath,
+      ...(process.env['SKIP_SECCOMP'] === '1'
+        ? [argsPath]
+        : [bpfPath, argsPath]),
       '--',
       finalCommand,
       ...finalArgs,
