@@ -12,7 +12,7 @@ import type {
   TerminalStrategy,
 } from '../routingStrategy.js';
 import { resolveModel } from '../../config/models.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 
 export class DefaultStrategy implements TerminalStrategy {
   readonly name = 'default';
@@ -21,7 +21,7 @@ export class DefaultStrategy implements TerminalStrategy {
     _context: RoutingContext,
     config: Config,
     _baseLlmClient: BaseLlmClient,
-    _localLiteRtLmClient: LocalLiteRtLmClient,
+    _localMlxLmClient: LocalMlxLmClient,
   ): Promise<RoutingDecision> {
     const defaultModel = resolveModel(
       config.getModel(),

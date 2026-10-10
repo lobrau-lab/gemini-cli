@@ -58,7 +58,7 @@ import {
 } from '../tools/shellBackgroundTools.js';
 import { GeminiClient } from '../core/client.js';
 import { BaseLlmClient } from '../core/baseLlmClient.js';
-import { LocalLiteRtLmClient } from '../core/localLiteRtLmClient.js';
+import { LocalMlxLmClient } from '../core/localMlxLmClient.js';
 import type { HookDefinition, HookEventName } from '../hooks/types.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
@@ -816,7 +816,7 @@ export class Config implements McpContext, AgentLoopContext {
   sandboxManager: SandboxManager;
   private readonly _sandboxPolicyManager: SandboxPolicyManager;
   private baseLlmClient!: BaseLlmClient;
-  private localLiteRtLmClient?: LocalLiteRtLmClient;
+  private localMlxLmClient?: LocalMlxLmClient;
   private modelRouterService: ModelRouterService;
   private readonly modelAvailabilityService: ModelAvailabilityService;
   private readonly fileFiltering: {
@@ -1733,11 +1733,11 @@ export class Config implements McpContext, AgentLoopContext {
     return this.baseLlmClient;
   }
 
-  getLocalLiteRtLmClient(): LocalLiteRtLmClient {
-    if (!this.localLiteRtLmClient) {
-      this.localLiteRtLmClient = new LocalLiteRtLmClient(this);
+  getLocalMlxLmClient(): LocalMlxLmClient {
+    if (!this.localMlxLmClient) {
+      this.localMlxLmClient = new LocalMlxLmClient(this);
     }
-    return this.localLiteRtLmClient;
+    return this.localMlxLmClient;
   }
 
   /** @internal Backing field alias for backwards-compatibility */

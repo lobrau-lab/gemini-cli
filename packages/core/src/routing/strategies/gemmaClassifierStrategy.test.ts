@@ -18,16 +18,16 @@ import {
 } from '../../config/models.js';
 import type { Content } from '@google/genai';
 import { debugLogger } from '../../utils/debugLogger.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 
-vi.mock('../../core/localLiteRtLmClient.js');
+vi.mock('../../core/localMlxLmClient.js');
 
 describe('GemmaClassifierStrategy', () => {
   let strategy: GemmaClassifierStrategy;
   let mockContext: RoutingContext;
   let mockConfig: Config;
   let mockBaseLlmClient: BaseLlmClient;
-  let mockLocalLiteRtLmClient: LocalLiteRtLmClient;
+  let mockLocalMlxLmClient: LocalMlxLmClient;
   let mockGenerateJson: Mock;
 
   beforeEach(() => {
@@ -38,7 +38,7 @@ describe('GemmaClassifierStrategy', () => {
     mockConfig = {
       getGemmaModelRouterSettings: vi.fn().mockReturnValue({
         enabled: true,
-        classifier: { model: 'gemma3-1b-gpu-custom' },
+        classifier: { model: 'mlx-community/quantized-gemma-2b' },
       }),
       getModel: () => DEFAULT_GEMINI_MODEL,
       getPreviewFeatures: () => false,
@@ -57,9 +57,9 @@ describe('GemmaClassifierStrategy', () => {
     };
 
     mockBaseLlmClient = {} as BaseLlmClient;
-    mockLocalLiteRtLmClient = {
+    mockLocalMlxLmClient = {
       generateJson: mockGenerateJson,
-    } as unknown as LocalLiteRtLmClient;
+    } as unknown as LocalMlxLmClient;
   });
 
   it('should return null if gemma model router is disabled', async () => {
@@ -71,12 +71,12 @@ describe('GemmaClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
     expect(decision).toBeNull();
   });
 
-  it('should throw an error if the model is not gemma3-1b-gpu-custom', async () => {
+  it('should throw an error if the model is not mlx-community/quantized-gemma-2b', async () => {
     vi.mocked(mockConfig.getGemmaModelRouterSettings).mockReturnValue({
       enabled: true,
       classifier: { model: 'other-model' },
@@ -87,9 +87,9 @@ describe('GemmaClassifierStrategy', () => {
         mockContext,
         mockConfig,
         mockBaseLlmClient,
-        mockLocalLiteRtLmClient,
+        mockLocalMlxLmClient,
       ),
-    ).rejects.toThrow('Only gemma3-1b-gpu-custom has been tested');
+    ).rejects.toThrow('Only mlx-community/quantized-gemma-2b has been tested');
   });
 
   it('should call generateJson with the correct parameters', async () => {
@@ -103,7 +103,7 @@ describe('GemmaClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockGenerateJson).toHaveBeenCalledWith(
@@ -125,7 +125,7 @@ describe('GemmaClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockGenerateJson).toHaveBeenCalledOnce();
@@ -151,7 +151,7 @@ describe('GemmaClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(mockGenerateJson).toHaveBeenCalledOnce();
@@ -176,7 +176,7 @@ describe('GemmaClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -198,7 +198,7 @@ describe('GemmaClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toBeNull();
@@ -231,7 +231,7 @@ describe('GemmaClassifierStrategy', () => {
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     // Define a type for the arguments passed to the mock `generateJson`
@@ -281,7 +281,7 @@ another user turn
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     const generateJsonCall = mockGenerateJson.mock.calls[0][0];
@@ -307,7 +307,7 @@ another user turn
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     type GenerateJsonCall = [Content[], string, string | undefined];
@@ -344,7 +344,7 @@ second message
       mockContext,
       mockConfig,
       mockBaseLlmClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision?.model).toBe(LATEST_GEMINI_FLASH_MODEL);

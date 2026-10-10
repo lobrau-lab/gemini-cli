@@ -8,7 +8,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { DefaultStrategy } from './defaultStrategy.js';
 import type { RoutingContext } from '../routingStrategy.js';
 import type { BaseLlmClient } from '../../core/baseLlmClient.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 import {
   DEFAULT_GEMINI_MODEL,
   PREVIEW_GEMINI_MODEL,
@@ -27,13 +27,13 @@ describe('DefaultStrategy', () => {
       getModel: vi.fn().mockReturnValue(DEFAULT_GEMINI_MODEL_AUTO),
     } as unknown as Config;
     const mockClient = {} as BaseLlmClient;
-    const mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+    const mockLocalMlxLmClient = {} as LocalMlxLmClient;
 
     const decision = await strategy.route(
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toEqual({
@@ -53,13 +53,13 @@ describe('DefaultStrategy', () => {
       getModel: vi.fn().mockReturnValue(PREVIEW_GEMINI_MODEL_AUTO),
     } as unknown as Config;
     const mockClient = {} as BaseLlmClient;
-    const mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+    const mockLocalMlxLmClient = {} as LocalMlxLmClient;
 
     const decision = await strategy.route(
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toEqual({
@@ -79,13 +79,13 @@ describe('DefaultStrategy', () => {
       getModel: vi.fn().mockReturnValue(GEMINI_MODEL_ALIAS_AUTO),
     } as unknown as Config;
     const mockClient = {} as BaseLlmClient;
-    const mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+    const mockLocalMlxLmClient = {} as LocalMlxLmClient;
 
     const decision = await strategy.route(
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toEqual({
@@ -106,13 +106,13 @@ describe('DefaultStrategy', () => {
       getModel: vi.fn().mockReturnValue(PREVIEW_GEMINI_FLASH_MODEL),
     } as unknown as Config;
     const mockClient = {} as BaseLlmClient;
-    const mockLocalLiteRtLmClient = {} as LocalLiteRtLmClient;
+    const mockLocalMlxLmClient = {} as LocalMlxLmClient;
 
     const decision = await strategy.route(
       mockContext,
       mockConfig,
       mockClient,
-      mockLocalLiteRtLmClient,
+      mockLocalMlxLmClient,
     );
 
     expect(decision).toEqual({

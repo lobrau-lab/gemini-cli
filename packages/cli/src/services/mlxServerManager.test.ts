@@ -21,9 +21,9 @@ vi.mock('../commands/gemma/start.js', () => ({
   startServer: mockStartServer,
 }));
 
-import { LiteRtServerManager } from './liteRtServerManager.js';
+import { MlxServerManager } from './mlxServerManager.js';
 
-describe('LiteRtServerManager', () => {
+describe('MlxServerManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -32,25 +32,25 @@ describe('LiteRtServerManager', () => {
   });
 
   it('uses the configured custom binary path when auto-starting', async () => {
-    mockGetBinaryPath.mockReturnValue('/user/lit');
+    mockGetBinaryPath.mockReturnValue('/user/mlx/bin/python3');
 
     const settings: GemmaModelRouterSettings = {
       enabled: true,
-      binaryPath: '/workspace/evil',
+      binaryPath: '/workspace/mlx',
       classifier: {
         host: 'http://localhost:8123',
       },
     };
 
-    await LiteRtServerManager.ensureRunning(settings);
+    await MlxServerManager.ensureRunning(settings);
 
     expect(mockGetBinaryPath).toHaveBeenCalledTimes(1);
-    expect(fs.existsSync).toHaveBeenCalledWith('/user/lit');
-    expect(mockStartServer).toHaveBeenCalledWith('/user/lit', 8123);
+    expect(fs.existsSync).toHaveBeenCalledWith('/user/mlx/bin/python3');
+    expect(mockStartServer).toHaveBeenCalledWith('/user/mlx/bin/python3', 8123);
   });
 
   it('falls back to the default binary path when no custom path is configured', async () => {
-    mockGetBinaryPath.mockReturnValue('/default/lit');
+    mockGetBinaryPath.mockReturnValue('/default/mlx/bin/python3');
 
     const settings: GemmaModelRouterSettings = {
       enabled: true,
@@ -59,10 +59,10 @@ describe('LiteRtServerManager', () => {
       },
     };
 
-    await LiteRtServerManager.ensureRunning(settings);
+    await MlxServerManager.ensureRunning(settings);
 
     expect(mockGetBinaryPath).toHaveBeenCalledTimes(1);
-    expect(fs.existsSync).toHaveBeenCalledWith('/default/lit');
-    expect(mockStartServer).toHaveBeenCalledWith('/default/lit', 9379);
+    expect(fs.existsSync).toHaveBeenCalledWith('/default/mlx/bin/python3');
+    expect(mockStartServer).toHaveBeenCalledWith('/default/mlx/bin/python3', 9379);
   });
 });

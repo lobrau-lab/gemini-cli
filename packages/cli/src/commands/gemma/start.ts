@@ -15,8 +15,9 @@ import {
   DEFAULT_PORT,
   getPidFilePath,
   getLogFilePath,
-  getLiteRtBinDir,
+  getMlxVenvDir,
   SERVER_START_WAIT_MS,
+  GEMMA_MODEL_NAME,
 } from './constants.js';
 import {
   getBinaryPath,
@@ -32,22 +33,24 @@ export async function startServer(
 ): Promise<boolean> {
   const alreadyRunning = await isServerRunning(port);
   if (alreadyRunning) {
-    debugLogger.log(`LiteRT server already running on port ${port}`);
+    debugLogger.log(`MLX server already running on port ${port}`);
     return true;
   }
 
   const logPath = getLogFilePath();
-  fs.mkdirSync(getLiteRtBinDir(), { recursive: true });
+  fs.mkdirSync(getMlxVenvDir(), { recursive: true });
   const tmpDir = path.dirname(getPidFilePath());
   fs.mkdirSync(tmpDir, { recursive: true });
 
   const logFd = fs.openSync(logPath, 'a');
 
   try {
-    const child = spawn(binaryPath, ['serve', `--port=${port}`, '--verbose'], {
+
+    const child = spawn(binaryPath, ['-m', 'mlx_lm.server', '--model', GEMMA_MODEL_NAME, '--port', `${port}`], {
       detached: true,
       stdio: ['ignore', logFd, logFd],
     });
+
 
     if (child.pid) {
       writeServerProcessInfo({
@@ -68,11 +71,11 @@ export async function startServer(
 
 export const startCommand: CommandModule = {
   command: 'start',
-  describe: 'Start the LiteRT-LM server',
+  describe: 'Start the MLX server',
   builder: (yargs) =>
     yargs.option('port', {
       type: 'number',
-      description: 'Port for the LiteRT server',
+      description: 'Port for the MLX server',
     }),
   handler: async (argv) => {
     let port: number | undefined;
@@ -89,7 +92,7 @@ export const startCommand: CommandModule = {
     if (!binaryPath || !isBinaryInstalled(binaryPath)) {
       debugLogger.error(
         chalk.red(
-          'LiteRT-LM binary not found. Run "gemini gemma setup" first.',
+          'MLX binary not found. Run "gemma setup" first.',
         ),
       );
       await exitCli(1);
@@ -99,17 +102,17 @@ export const startCommand: CommandModule = {
     const alreadyRunning = await isServerRunning(port);
     if (alreadyRunning) {
       debugLogger.log(
-        chalk.green(`LiteRT server is already running on port ${port}.`),
+        chalk.green(`MLX server is already running on port ${port}.`),
       );
       await exitCli(0);
       return;
     }
 
-    debugLogger.log(`Starting LiteRT server on port ${port}...`);
+    debugLogger.log(`Starting MLX server on port ${port}...`);
 
     const started = await startServer(binaryPath, port);
     if (started) {
-      debugLogger.log(chalk.green(`LiteRT server started on port ${port}.`));
+      debugLogger.log(chalk.green(`MLX server started on port ${port}.`));
       debugLogger.log(chalk.dim(`Logs: ${getLogFilePath()}`));
       await exitCli(0);
     } else {

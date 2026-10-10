@@ -1,7 +1,7 @@
 {
-  "name": "@google/gemini-cli",
+  "name": "@google/gemma-cli",
   "version": "0.65.0-nightly.20261006.gfb972b2f8",
-  "description": "Gemini CLI",
+  "description": "Gemma CLI",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -10,7 +10,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "gemini": "dist/index.js"
+    "gemma": "dist/index.js"
   },
   "scripts": {
     "build": "node ../../scripts/build_package.js",

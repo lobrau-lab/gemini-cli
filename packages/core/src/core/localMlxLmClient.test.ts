@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LocalLiteRtLmClient } from './localLiteRtLmClient.js';
+import { LocalMlxLmClient } from './localMlxLmClient.js';
 import type { Config } from '../config/config.js';
 import { GoogleGenAI } from '@google/genai';
 
@@ -20,7 +20,7 @@ vi.mock('@google/genai', () => {
   return { GoogleGenAI };
 });
 
-describe('LocalLiteRtLmClient', () => {
+describe('LocalMlxLmClient', () => {
   let mockConfig: Config;
 
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe('LocalLiteRtLmClient', () => {
       text: '{"key": "value"}',
     });
 
-    const client = new LocalLiteRtLmClient(mockConfig);
+    const client = new LocalMlxLmClient(mockConfig);
     const result = await client.generateJson([], 'test-instruction');
 
     expect(result).toEqual({ key: 'value' });
@@ -70,7 +70,7 @@ describe('LocalLiteRtLmClient', () => {
       text: null,
     });
 
-    const client = new LocalLiteRtLmClient(mockConfig);
+    const client = new LocalMlxLmClient(mockConfig);
     await expect(client.generateJson([], 'test-instruction')).rejects.toThrow(
       'Invalid response from Local Gemini API: No text found',
     );
@@ -83,7 +83,7 @@ describe('LocalLiteRtLmClient', () => {
 }`, // Smart quotes, trailing comma
     });
 
-    const client = new LocalLiteRtLmClient(mockConfig);
+    const client = new LocalMlxLmClient(mockConfig);
     await expect(client.generateJson([], 'test-instruction')).rejects.toThrow(
       SyntaxError,
     );
@@ -94,7 +94,7 @@ describe('LocalLiteRtLmClient', () => {
       text: '{"key": "value"}',
     });
 
-    const client = new LocalLiteRtLmClient(mockConfig);
+    const client = new LocalMlxLmClient(mockConfig);
     await client.generateJson(
       [{ role: 'user', parts: [{ text: 'initial prompt' }] }],
       'test-instruction',
@@ -115,7 +115,7 @@ test-reminder`,
       text: '{"key": "value"}',
     });
 
-    const client = new LocalLiteRtLmClient(mockConfig);
+    const client = new LocalMlxLmClient(mockConfig);
     const controller = new AbortController();
     await client.generateJson(
       [],

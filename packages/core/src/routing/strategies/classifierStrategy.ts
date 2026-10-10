@@ -21,7 +21,7 @@ import {
 } from '../../utils/messageInspectors.js';
 import { debugLogger } from '../../utils/debugLogger.js';
 import { normalizeModelId } from '../../utils/modelUtils.js';
-import type { LocalLiteRtLmClient } from '../../core/localLiteRtLmClient.js';
+import type { LocalMlxLmClient } from '../../core/localMlxLmClient.js';
 import { LlmRole } from '../../telemetry/types.js';
 
 // The number of recent history turns to provide to the router for context.
@@ -133,7 +133,7 @@ export class ClassifierStrategy implements RoutingStrategy {
     context: RoutingContext,
     config: Config,
     baseLlmClient: BaseLlmClient,
-    _localLiteRtLmClient: LocalLiteRtLmClient,
+    _localMlxLmClient: LocalMlxLmClient,
   ): Promise<RoutingDecision | null> {
     const startTime = Date.now();
     try {
