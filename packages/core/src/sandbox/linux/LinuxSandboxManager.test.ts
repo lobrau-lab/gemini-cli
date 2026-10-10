@@ -83,9 +83,15 @@ describe('LinuxSandboxManager', () => {
 
       expect(result.program).toBe('sh');
       expect(result.args[0]).toBe('-c');
-      expect(result.args[1]).toContain(
-        'exec bwrap --args 8 "$@" 8< "$args_path" 9< "$bpf_path"',
-      );
+      if (process.env['SKIP_SECCOMP'] !== '1') {
+        expect(result.args[1]).toContain(
+          'exec bwrap --args 8 "$@" 8< "$args_path" 9< "$bpf_path"',
+        );
+      } else {
+        expect(result.args[1]).toContain(
+          'exec bwrap --args 8 "$@" 8< "$args_path"',
+        );
+      }
       expect(result.args[result.args.length - 3]).toBe('--');
       expect(result.args[result.args.length - 2]).toBe('ls');
       expect(result.args[result.args.length - 1]).toBe('-la');
