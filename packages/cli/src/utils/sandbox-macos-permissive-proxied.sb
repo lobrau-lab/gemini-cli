@@ -36,6 +36,7 @@
     (sysctl-name "hw.l3cachesize_compat")
     (sysctl-name "hw.logicalcpu_max")
     (sysctl-name "hw.machine")
+    (sysctl-name "hw.model")
     (sysctl-name "hw.ncpu")
     (sysctl-name "hw.nperflevels")
     (sysctl-name "hw.optional.arm.FEAT_BF16")
