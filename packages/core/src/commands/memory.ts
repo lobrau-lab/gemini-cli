@@ -145,27 +145,31 @@ export async function listInboxSkills(config: Config): Promise<InboxSkill[]> {
     }
   }
 
-  const skills: InboxSkill[] = [];
-  for (const dir of dirs) {
-    const skillPath = path.join(skillsDir, dir.name, 'SKILL.md');
-    const skillDef = await loadSkillFromFile(skillPath);
-    if (!skillDef) continue;
+  const skillsResults = await Promise.all(
+    dirs.map(async (dir) => {
+      const skillPath = path.join(skillsDir, dir.name, 'SKILL.md');
+      const skillDef = await loadSkillFromFile(skillPath);
+      if (!skillDef) return null;
 
-    let content = '';
-    try {
-      content = await fs.readFile(skillPath, 'utf-8');
-    } catch {
-      // Best-effort — preview will be empty
-    }
+      let content = '';
+      try {
+        content = await fs.readFile(skillPath, 'utf-8');
+      } catch {
+        // Best-effort — preview will be empty
+      }
 
-    skills.push({
-      dirName: dir.name,
-      name: skillDef.name,
-      description: skillDef.description,
-      content,
-      extractedAt: skillDateMap.get(dir.name),
-    });
-  }
+      const res: InboxSkill = {
+        dirName: dir.name,
+        name: skillDef.name,
+        description: skillDef.description,
+        content,
+        extractedAt: skillDateMap.get(dir.name),
+      };
+      return res;
+    }),
+  );
+
+  const skills = skillsResults.filter((s): s is InboxSkill => s !== null);
 
   return skills;
 }
