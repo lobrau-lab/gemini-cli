@@ -467,57 +467,63 @@ export async function listInboxMemoryPatches(
     const sourceFiles: string[] = [];
     let latestMtime: string | undefined;
 
-    for (const sourcePath of patchFiles) {
-      let content: string;
-      try {
-        content = await fs.readFile(sourcePath, 'utf-8');
-      } catch {
-        continue;
-      }
+    const patchResults = await Promise.all(
+      patchFiles.map(async (sourcePath) => {
+        let content: string;
+        try {
+          content = await fs.readFile(sourcePath, 'utf-8');
+        } catch {
+          return null;
+        }
 
-      let parsed: Diff.StructuredPatch[];
-      try {
-        parsed = Diff.parsePatch(content);
-      } catch {
-        continue;
-      }
-      if (!hasParsedPatchHunks(parsed)) {
-        continue;
-      }
+        let parsed: Diff.StructuredPatch[];
+        try {
+          parsed = Diff.parsePatch(content);
+        } catch {
+          return null;
+        }
+        if (!hasParsedPatchHunks(parsed)) {
+          return null;
+        }
 
-      const validated = validateParsedSkillPatchHeaders(parsed);
-      if (!validated.success) {
-        continue;
-      }
+        const validated = validateParsedSkillPatchHeaders(parsed);
+        if (!validated.success) {
+          return null;
+        }
 
-      // Skip the entire source file if ANY of its targets escapes the kind's
-      // allowed target set.
-      const targetsAllAllowed = await Promise.all(
-        validated.patches.map(
-          async (header) =>
-            (await resolveMemoryPatchTargetWithinAllowedSet(
-              header.targetPath,
-              validationContext,
-            )) !== undefined,
-        ),
-      );
-      if (!targetsAllAllowed.every(Boolean)) {
-        continue;
-      }
+        const targetsAllAllowed = await Promise.all(
+          validated.patches.map(
+            async (header) =>
+              (await resolveMemoryPatchTargetWithinAllowedSet(
+                header.targetPath,
+                validationContext,
+              )) !== undefined,
+          ),
+        );
+        if (!targetsAllAllowed.every(Boolean)) {
+          return null;
+        }
 
-      for (const [index, header] of validated.patches.entries()) {
+        const mtime = await getFileMtimeIso(sourcePath);
+
+        return { parsed, validated, sourcePath, mtime };
+      }),
+    );
+
+    for (const result of patchResults) {
+      if (!result) continue;
+      for (const [index, header] of result.validated.patches.entries()) {
         aggregatedEntries.push({
           targetPath: header.targetPath,
           isNewFile: header.isNewFile,
-          diffContent: formatParsedDiff(parsed[index]),
+          diffContent: formatParsedDiff(result.parsed[index]),
         });
       }
 
-      sourceFiles.push(path.basename(sourcePath));
+      sourceFiles.push(path.basename(result.sourcePath));
 
-      const mtime = await getFileMtimeIso(sourcePath);
-      if (mtime && (!latestMtime || mtime > latestMtime)) {
-        latestMtime = mtime;
+      if (result.mtime && (!latestMtime || result.mtime > latestMtime)) {
+        latestMtime = result.mtime;
       }
     }
 
@@ -1160,27 +1166,34 @@ export async function listInboxPatches(config: Config): Promise<InboxPatch[]> {
   }
 
   const patches: InboxPatch[] = [];
-  for (const patchFile of patchFiles) {
-    const patchPath = path.join(skillsDir, patchFile);
-    try {
-      const content = await fs.readFile(patchPath, 'utf-8');
-      const parsed = Diff.parsePatch(content);
-      if (!hasParsedPatchHunks(parsed)) continue;
+  const patchesResults = await Promise.all(
+    patchFiles.map(async (patchFile) => {
+      const patchPath = path.join(skillsDir, patchFile);
+      try {
+        const content = await fs.readFile(patchPath, 'utf-8');
+        const parsed = Diff.parsePatch(content);
+        if (!hasParsedPatchHunks(parsed)) return null;
 
-      const patchEntries: InboxPatchEntry[] = parsed.map((p) => ({
-        targetPath: p.newFileName ?? p.oldFileName ?? '',
-        diffContent: formatParsedDiff(p),
-      }));
+        const patchEntries: InboxPatchEntry[] = parsed.map((p) => ({
+          targetPath: p.newFileName ?? p.oldFileName ?? '',
+          diffContent: formatParsedDiff(p),
+        }));
 
-      patches.push({
-        fileName: patchFile,
-        name: patchFile.replace(/\.patch$/, ''),
-        entries: patchEntries,
-        extractedAt: await getPatchExtractedAt(patchPath),
-      });
-    } catch {
-      // Skip unreadable patch files
-    }
+        const res: InboxPatch = {
+          fileName: patchFile,
+          name: patchFile.replace(/\.patch$/, ''),
+          entries: patchEntries,
+          extractedAt: (await getPatchExtractedAt(patchPath)) || undefined,
+        };
+        return res;
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  for (const res of patchesResults) {
+    if (res) patches.push(res);
   }
 
   return patches;
