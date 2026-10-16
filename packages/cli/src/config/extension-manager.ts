@@ -190,7 +190,7 @@ export class ExtensionManager extends ExtensionLoader {
             return new RegExp(pattern).test(
               getRealPath(installMetadata.source),
             );
-          } catch {
+          } catch (e: unknown) {
             throw new Error(
               `Invalid regex pattern in allowedExtensions setting: "${pattern}. Error: ${getErrorMessage(e)}`,
             );
@@ -453,7 +453,22 @@ Would you like to attempt to install via "git clone" instead?`,
           }
         }
 
-        await fs.promises.writeFile(metadataPath, metadataString);
+        try {
+          await fs.promises.writeFile(metadataPath, metadataString);
+        } catch (e: unknown) {
+          if (isUpdate && previousExtensionConfigData !== null) {
+            await fs.promises
+              .writeFile(
+                path.join(destinationPath, EXTENSIONS_CONFIG_FILENAME),
+                previousExtensionConfigData,
+              )
+              .catch(() => {});
+          }
+          debugLogger.error(
+            `Failed to install or update extension: ${getErrorMessage(e)}`,
+          );
+          throw e;
+        }
 
         // Establish trust at point of installation
         await this.storeExtensionIntegrity(
@@ -466,7 +481,7 @@ Would you like to attempt to install via "git clone" instead?`,
           if (!extension) {
             throw new Error(`Extension not found`);
           }
-        } catch {
+        } catch (e: unknown) {
           if (isUpdate && previousExtensionConfigData !== null) {
             try {
               await fs.promises.writeFile(
@@ -760,7 +775,7 @@ Would you like to attempt to install via "git clone" instead?`,
             return new RegExp(pattern).test(
               getRealPath(installMetadata?.source ?? ''),
             );
-          } catch {
+          } catch (e: unknown) {
             throw new Error(
               `Invalid regex pattern in allowedExtensions setting: "${pattern}. Error: ${getErrorMessage(e)}`,
             );
@@ -1017,7 +1032,7 @@ Would you like to attempt to install via "git clone" instead?`,
         checkers,
         plan,
       };
-    } catch {
+    } catch (e: unknown) {
       debugLogger.error(
         `Warning: Skipping extension in ${effectiveExtensionPath}: ${getErrorMessage(
           e,
@@ -1076,7 +1091,7 @@ Would you like to attempt to install via "git clone" instead?`,
 
       validateName(config.name);
       return config;
-    } catch {
+    } catch (e: unknown) {
       throw new Error(
         `Failed to load extension config from ${configFilePath}: ${getErrorMessage(
           e,
@@ -1121,7 +1136,7 @@ Would you like to attempt to install via "git clone" instead?`,
       ) as { [K in HookEventName]?: HookDefinition[] };
 
       return hydratedHooks;
-    } catch {
+    } catch (e: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
         return undefined; // File not found is not an error here.
