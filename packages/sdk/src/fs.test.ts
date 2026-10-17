@@ -23,9 +23,7 @@ describe('SdkAgentFilesystem', () => {
 
   describe('readFile', () => {
     it('returns null if validatePathAccess returns an error', async () => {
-      vi.mocked(mockConfig.validatePathAccess).mockReturnValue(
-        new Error('Access Denied'),
-      );
+      vi.mocked(mockConfig.validatePathAccess).mockReturnValue('Access Denied');
 
       const result = await agentFs.readFile('/denied/path.txt');
       expect(result).toBeNull();

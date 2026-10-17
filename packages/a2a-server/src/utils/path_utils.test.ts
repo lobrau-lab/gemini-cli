@@ -10,8 +10,8 @@ import fs from 'node:fs';
 
 // Mock resolveToRealPath and isSubpath
 vi.mock('@google/gemini-cli-core', () => ({
-  resolveToRealPath: (p) => p,
-  isSubpath: (parent, child) => child.startsWith(parent),
+  resolveToRealPath: (p: string) => p,
+  isSubpath: (parent: string, child: string) => child.startsWith(parent),
 }));
 
 describe('path_utils', () => {
